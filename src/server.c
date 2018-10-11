@@ -54,13 +54,15 @@ int send_response(int fd, char *header, char *content_type, void *body, int cont
     char response[max_response_size];
 
     // Build HTTP response and store it in response
-
+    sprintf(response,"HTTP/1.1 200 OK\nContent-Length:%s\nContent-Type:%s\n",content_length,content_type);
     ///////////////////
     // IMPLEMENT ME! //
     ///////////////////
 
+
     // Send it all!
-    // int rv = send(fd, response, response_length, 0);
+    size_t response_length = strlen(response);
+    int rv = send(fd, response, response_length, 0);
 
     if (rv < 0) {
         perror("send");
@@ -75,14 +77,15 @@ int send_response(int fd, char *header, char *content_type, void *body, int cont
  */
 void get_d20(int fd)
 {
+
     // Generate a random number between 1 and 20 inclusive
-    
+    int random = rand() % 20;
     ///////////////////
     // IMPLEMENT ME! //
     ///////////////////
 
     // Use send_response() to send it back as text/plain data
-
+    send_response(fd,"HTML/1.1 200 OK","text/html",&random,sizeof(random));
     ///////////////////
     // IMPLEMENT ME! //
     ///////////////////
@@ -151,6 +154,22 @@ void handle_http_request(int fd, struct cache *cache)
     char* protocol;
     char* route;
     sscanf(request,"%s %s %s",type,route,protocol);
+
+    //sizeof(body) is content length
+    if (strcmp(type,"GET") == 0 ) {
+        char* hard_code_response = "HTTP/1.1 200 OK";
+        // char* content_type = mime_type_get();
+        if (strcmp(route,"/d20") == 0) {
+            d20(fd);
+        }
+        // send_response(fd,hard_code_response,content_type);
+    }
+
+    if (strcmp(type,"PUT") == 0) {
+        // mime_type = mime_type_get()
+        // send_response(fd,"HTTP/1.1 200 OK", )
+    }
+
 
     if (bytes_recvd < 0) {
         perror("recv");
