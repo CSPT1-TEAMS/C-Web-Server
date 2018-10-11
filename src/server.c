@@ -60,7 +60,7 @@ int send_response(int fd, char *header, char *content_type, void *body, int cont
     ///////////////////
 
     // Send it all!
-    int rv = send(fd, response, response_length, 0);
+    // int rv = send(fd, response, response_length, 0);
 
     if (rv < 0) {
         perror("send");
@@ -146,6 +146,11 @@ void handle_http_request(int fd, struct cache *cache)
 
     // Read request
     int bytes_recvd = recv(fd, request, request_buffer_size - 1, 0);
+   
+    char* type;
+    char* protocol;
+    char* route;
+    sscanf(request,"%s %s %s",type,route,protocol);
 
     if (bytes_recvd < 0) {
         perror("recv");
