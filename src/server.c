@@ -54,7 +54,7 @@ int send_response(int fd, char *header, char *content_type, void *body, int cont
     char response[max_response_size];
 
     // Build HTTP response and store it in response
-    sprintf(response,"HTTP/1.1 200 OK\nContent-Length:%s\nContent-Type:%s\n",content_length,content_type);
+    sprintf(response,"header:%s\n\nContent-Type:%s\n,body:test body",header,content_type);
     ///////////////////
     // IMPLEMENT ME! //
     ///////////////////
@@ -85,7 +85,7 @@ void get_d20(int fd)
     ///////////////////
 
     // Use send_response() to send it back as text/plain data
-    send_response(fd,"HTML/1.1 200 OK","text/html",&random,sizeof(random));
+    send_response(fd,"HTML/1.1 200 OK","text/plain",random,sizeof(random));
     ///////////////////
     // IMPLEMENT ME! //
     ///////////////////
@@ -112,6 +112,7 @@ void resp_404(int fd)
     mime_type = mime_type_get(filepath);
 
     send_response(fd, "HTTP/1.1 404 NOT FOUND", mime_type, filedata->data, filedata->size);
+
 
     file_free(filedata);
 }
@@ -160,7 +161,7 @@ void handle_http_request(int fd, struct cache *cache)
         char* hard_code_response = "HTTP/1.1 200 OK";
         // char* content_type = mime_type_get();
         if (strcmp(route,"/d20") == 0) {
-            d20(fd);
+            get_d20(fd);
         }
         // send_response(fd,hard_code_response,content_type);
     }
