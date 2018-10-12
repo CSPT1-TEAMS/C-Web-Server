@@ -60,7 +60,7 @@ int send_response(int fd, char *header, char *content_type, void *body, int cont
     ///////////////////
 
     // Send it all!
-    int rv = send(fd, response, response_length, 0);
+    int rv = send(fd, response, content_length, 0);
 
     if (rv < 0) {
         perror("send");
@@ -143,6 +143,10 @@ void handle_http_request(int fd, struct cache *cache)
 {
     const int request_buffer_size = 65536; // 64K
     char request[request_buffer_size];
+    char req[8];
+    char url[1024];
+    char format[10];
+
 
     // Read request
     int bytes_recvd = recv(fd, request, request_buffer_size - 1, 0);
@@ -152,10 +156,29 @@ void handle_http_request(int fd, struct cache *cache)
         return;
     }
 
+    sscanf(request, "%s %s %s", req, url, format);
+    printf("%s\n", req);
+    printf("%s\n", url);
+    printf("%s\n", format);
+
+
+    printf("%s",request);
+
+    if (strcmp(type, "GET") == 0) {
+        
+        if (strcmp(url, "/d20") == 0) {
+
+        } else {
+            
+        }
+    }
+
+
 
     ///////////////////
     // IMPLEMENT ME! //
     ///////////////////
+
 
     // Read the three components of the first request line
 
