@@ -167,9 +167,9 @@ void handle_http_request(int fd, struct cache *cache)
     if (strcmp(type, "GET") == 0) {
         
         if (strcmp(url, "/d20") == 0) {
-
+            // call handle d20
         } else {
-            
+            //check the serverroot directory for file specified by URL, if no file respond with serverfiles/404.html
         }
     }
 
