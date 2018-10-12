@@ -60,7 +60,7 @@ int send_response(int fd, char *header, char *content_type, void *body, int cont
     ///////////////////
 
     // Send it all!
-    int rv = send(fd, response, response_length, 0);
+    int rv = send(fd, response, content_length, 0);
 
     if (rv < 0) {
         perror("send");
@@ -76,11 +76,13 @@ int send_response(int fd, char *header, char *content_type, void *body, int cont
 void get_d20(int fd)
 {
     // Generate a random number between 1 and 20 inclusive
-    
+    int random20 = (rand() % 20) + 1;
+    printf("RANDOM: %d", random20);
+
     ///////////////////
     // IMPLEMENT ME! //
     ///////////////////
-
+    // send_response(, , text/html, random20);
     // Use send_response() to send it back as text/plain data
 
     ///////////////////
@@ -143,6 +145,9 @@ void handle_http_request(int fd, struct cache *cache)
 {
     const int request_buffer_size = 65536; // 64K
     char request[request_buffer_size];
+    char method[4];
+    char url[50];
+    char proto[10];
 
     // Read request
     int bytes_recvd = recv(fd, request, request_buffer_size - 1, 0);
@@ -151,14 +156,30 @@ void handle_http_request(int fd, struct cache *cache)
         perror("recv");
         return;
     }
+    printf("%s", request);
+    sscanf(request, "%s %s %s", method, url, proto);
+    printf("METHOD: %s\n", method);
+    printf("URL: %s\n", url);
+    printf("PROTO: %s\n", proto);
 
+    if(strcmp(method, "GET") == 0) {
+        if(strcmp(url, "/d20") == 0) {
+            get_d20(fd);
+        } 
+        // else if (strcmp(url, "/") == 0) {
+        //     get_file(fd);
+        // } 
+        else {
+            resp_404(fd);
+        }
+    }
 
     ///////////////////
     // IMPLEMENT ME! //
     ///////////////////
 
     // Read the three components of the first request line
-
+//parse first line of request
     // If GET, handle the get endpoints
 
     //    Check if it's /d20 and handle that special case
