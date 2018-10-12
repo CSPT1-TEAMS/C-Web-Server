@@ -77,6 +77,7 @@ int send_response(int fd, char *header, char *content_type, void *body, int cont
  */
 void get_d20(int fd)
 {
+    printf("d20 called\n");
 
     // Generate a random number between 1 and 20 inclusive
     int random = rand() % 20;
@@ -148,17 +149,29 @@ void handle_http_request(int fd, struct cache *cache)
     const int request_buffer_size = 65536; // 64K
     char request[request_buffer_size];
 
+
     // Read request
     int bytes_recvd = recv(fd, request, request_buffer_size - 1, 0);
+     if (bytes_recvd < 0) {
+        perror("recv");
+        return;
+    }
+    
+    request[bytes_recvd] = '\0';
+    
+
+    printf("bytes_recvd not seg fault\n");
+
    
-    char* type;
-    char* protocol;
-    char* route;
+    char type[8];
+    char protocol[128];
+    char route[1024];
     sscanf(request,"%s %s %s",type,route,protocol);
+    printf("type %s\n", type);
 
     //sizeof(body) is content length
     if (strcmp(type,"GET") == 0 ) {
-        char* hard_code_response = "HTTP/1.1 200 OK";
+        
         // char* content_type = mime_type_get();
         if (strcmp(route,"/d20") == 0) {
             get_d20(fd);
@@ -172,10 +185,7 @@ void handle_http_request(int fd, struct cache *cache)
     }
 
 
-    if (bytes_recvd < 0) {
-        perror("recv");
-        return;
-    }
+   
 
 
     ///////////////////
