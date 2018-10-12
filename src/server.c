@@ -54,7 +54,7 @@ int send_response(int fd, char *header, char *content_type, void *body, int cont
     char response[max_response_size];
 
     // Build HTTP response and store it in response
-    sprintf(response,"header:%s\n\nContent-Type:%s\n,body:test body",header,content_type);
+    sprintf(response,"header:%s\n\nContent-Type:%s\n,body:%s\n", header, content_type, body);
     ///////////////////
     // IMPLEMENT ME! //
     ///////////////////
@@ -78,15 +78,22 @@ int send_response(int fd, char *header, char *content_type, void *body, int cont
 void get_d20(int fd)
 {
     printf("d20 called\n");
+    const int max_response_size = 100;
+    char response[max_response_size];
 
     // Generate a random number between 1 and 20 inclusive
     int random = rand() % 20;
+    sprintf(response, "%d", random);
+
+
+
     ///////////////////
     // IMPLEMENT ME! //
     ///////////////////
 
     // Use send_response() to send it back as text/plain data
-    send_response(fd,"HTML/1.1 200 OK","text/plain",random,sizeof(random));
+    send_response(fd, "HTML/1.1 200 OK", "text/plain", response, sizeof(response));
+
     ///////////////////
     // IMPLEMENT ME! //
     ///////////////////
@@ -158,10 +165,6 @@ void handle_http_request(int fd, struct cache *cache)
     }
     
     request[bytes_recvd] = '\0';
-    
-
-    printf("bytes_recvd not seg fault\n");
-
    
     char type[8];
     char protocol[128];
