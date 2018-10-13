@@ -53,15 +53,15 @@ int send_response(int fd, char *header, char *content_type, void *body, int cont
     const int max_response_size = 65536;
     char response[max_response_size];
 
-    // Build HTTP response and store it in response
 
+    // Build HTTP response and store it in response
+    *response = "Hello world";
     ///////////////////
     // IMPLEMENT ME! //
     ///////////////////
-
     // Send it all!
+    // printf("RESPONSE %s", response);
     int rv = send(fd, response, content_length, 0);
-
     if (rv < 0) {
         perror("send");
     }
@@ -76,18 +76,19 @@ int send_response(int fd, char *header, char *content_type, void *body, int cont
 void get_d20(int fd)
 {
     // Generate a random number between 1 and 20 inclusive
+    ///////////////////
+    // IMPLEMENT ME! //
+    ///////////////////
+    srand(time(NULL));
     int random20 = (rand() % 20) + 1;
-    printf("RANDOM: %d", random20);
+    printf("RANDOM: %d\n", random20);
 
-    ///////////////////
-    // IMPLEMENT ME! //
-    ///////////////////
-    // send_response(, , text/html, random20);
     // Use send_response() to send it back as text/plain data
-
     ///////////////////
     // IMPLEMENT ME! //
     ///////////////////
+    send_response(fd, "HTTP/1.1 200 OK", "text/html", random20, sizeof(random20));
+
 }
 
 /**
@@ -166,10 +167,12 @@ void handle_http_request(int fd, struct cache *cache)
         if(strcmp(url, "/d20") == 0) {
             get_d20(fd);
         } 
-        // else if (strcmp(url, "/") == 0) {
-        //     get_file(fd);
-        // } 
+        else if (strcmp(url, "/") == 0) {
+
+            get_file(fd, cache, "./serverroot/index.html");
+        } 
         else {
+            printf("FD %d", fd);
             resp_404(fd);
         }
     }
