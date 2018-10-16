@@ -34,7 +34,7 @@
 #include "mime.h"
 #include "cache.h"
 
-#define PORT "3490"  // the port users will be connecting to
+#define PORT "3490" // the port users will be connecting to
 
 #define SERVER_FILES "./serverfiles"
 #define SERVER_ROOT "./serverroot"
@@ -53,22 +53,35 @@ int send_response(int fd, char *header, char *content_type, void *body, int cont
     const int max_response_size = 65536;
     char response[max_response_size];
 
+    time_t t1 = time(NULL);
+    struct tm *lt1 = localtime( &t1 );
 
     // Build HTTP response and store it in response
-    *response = "Hello world";
-    ///////////////////
-    // IMPLEMENT ME! //
-    ///////////////////
+    int response_length = sprintf( response,
+        "%s\n"
+        "Date: %s" //asctime() adds its own newline
+        "Connection: close\n",
+        "Content-Length: %d\n"
+        "Content-Type: %s\n"
+        "\n"
+        "%s\n",
+        header,
+        asctime(lt1),
+        content_length,
+        content_type,
+        body
+    );
+
+
     // Send it all!
-    // printf("RESPONSE %s", response);
-    int rv = send(fd, response, content_length, 0);
-    if (rv < 0) {
+    int rv = send(fd, response, response_length, 0);
+    if (rv < 0)
+    {
         perror("send");
     }
 
     return rv;
 }
-
 
 /**
  * Send a /d20 endpoint response
@@ -76,19 +89,12 @@ int send_response(int fd, char *header, char *content_type, void *body, int cont
 void get_d20(int fd)
 {
     // Generate a random number between 1 and 20 inclusive
-    ///////////////////
-    // IMPLEMENT ME! //
-    ///////////////////
-    srand(time(NULL));
+    // srand(time(NULL));
     int random20 = (rand() % 20) + 1;
-    printf("RANDOM: %d\n", random20);
-
+    char body[8];
+    sprintf(body, "%d", random20);
     // Use send_response() to send it back as text/plain data
-    ///////////////////
-    // IMPLEMENT ME! //
-    ///////////////////
-    send_response(fd, "HTTP/1.1 200 OK", "text/html", random20, sizeof(random20));
-
+    send_response(fd, "HTTP/1.1 200 OK", "text/plain", body, strlen(body));
 }
 
 /**
@@ -97,13 +103,14 @@ void get_d20(int fd)
 void resp_404(int fd)
 {
     char filepath[4096];
-    struct file_data *filedata; 
+    struct file_data *filedata;
     char *mime_type;
 
     snprintf(filepath, sizeof filepath, "%s/404.html", SERVER_FILES);
     filedata = file_load(filepath);
 
-    if (filedata == NULL) {
+    if (filedata == NULL)
+    {
         // TODO: make this non-fatal
         fprintf(stderr, "cannot find system 404 file\n");
         exit(3);
@@ -121,9 +128,15 @@ void resp_404(int fd)
  */
 void get_file(int fd, struct cache *cache, char *request_path)
 {
-    ///////////////////
-    // IMPLEMENT ME! //
-    ///////////////////
+    struct file_data *filedata;
+    filedata = file_load( request_path );
+    if (filedata == NULL) {
+        // send_response(fd, "HTTP/1.1 404 NOT FOUND", mime_type, filedata->data, filedata->size);
+    } else {
+        char *mime_type = mime_type_get(request_path);
+        send_response(fd, "HTTP/1.1 200 OK", mime_type, filedata->data, filedata->size);
+    }
+    file_free(filedata);
 }
 
 /**
@@ -146,48 +159,45 @@ void handle_http_request(int fd, struct cache *cache)
 {
     const int request_buffer_size = 65536; // 64K
     char request[request_buffer_size];
-    char method[4];
-    char url[50];
-    char proto[10];
 
     // Read request
     int bytes_recvd = recv(fd, request, request_buffer_size - 1, 0);
 
-    if (bytes_recvd < 0) {
+    if (bytes_recvd < 0)
+    {
         perror("recv");
         return;
     }
-    printf("%s", request);
-    sscanf(request, "%s %s %s", method, url, proto);
-    printf("METHOD: %s\n", method);
-    printf("URL: %s\n", url);
-    printf("PROTO: %s\n", proto);
-
-    if(strcmp(method, "GET") == 0) {
-        if(strcmp(url, "/d20") == 0) {
-            get_d20(fd);
-        } 
-        else if (strcmp(url, "/") == 0) {
-
-            get_file(fd, cache, "./serverroot/index.html");
-        } 
-        else {
-            printf("FD %d", fd);
-            resp_404(fd);
-        }
-    }
-
-    ///////////////////
-    // IMPLEMENT ME! //
-    ///////////////////
 
     // Read the three components of the first request line
-//parse first line of request
+    //parse first line of request
+    char method[4], url[50], proto[10];
+
+    // printf("%s", request);
+    sscanf(request, "%s %s %s", method, url, proto);
+    // printf("METHOD: %s\n", method);
+    // printf("URL: %s\n", url);
+    // printf("PROTO: %s\n", proto);
+
     // If GET, handle the get endpoints
-
-    //    Check if it's /d20 and handle that special case
-    //    Otherwise serve the requested file by calling get_file()
-
+    if (strcmp(method, "GET") == 0)
+    {
+        //    Check if it's /d20 and handle that special case
+        if (strcmp(url, "/d20") == 0)
+        {
+            get_d20(fd);
+        }
+        //    Otherwise serve the requested file by calling get_file()
+        // else if (strcmp(url, "/") == 0) {
+        //     get_file(fd, cache, url);
+        // }
+        else
+        {
+            get_file(fd, cache, url);
+            // printf("FD %d", fd);
+            // resp_404(fd);
+        }
+    }
 
     // (Stretch) If POST, handle the post request
 }
@@ -197,7 +207,7 @@ void handle_http_request(int fd, struct cache *cache)
  */
 int main(void)
 {
-    int newfd;  // listen on sock_fd, new connection on newfd
+    int newfd;                          // listen on sock_fd, new connection on newfd
     struct sockaddr_storage their_addr; // connector's address information
     char s[INET6_ADDRSTRLEN];
 
@@ -206,7 +216,8 @@ int main(void)
     // Get a listening socket
     int listenfd = get_listener_socket(PORT);
 
-    if (listenfd < 0) {
+    if (listenfd < 0)
+    {
         fprintf(stderr, "webserver: fatal error getting listening socket\n");
         exit(1);
     }
@@ -216,24 +227,26 @@ int main(void)
     // This is the main loop that accepts incoming connections and
     // fork()s a handler process to take care of it. The main parent
     // process then goes back to waiting for new connections.
-    
-    while(1) {
+
+    while (1)
+    {
         socklen_t sin_size = sizeof their_addr;
 
         // Parent process will block on the accept() call until someone
         // makes a new connection:
         newfd = accept(listenfd, (struct sockaddr *)&their_addr, &sin_size);
-        if (newfd == -1) {
+        if (newfd == -1)
+        {
             perror("accept");
             continue;
         }
 
         // Print out a message that we got the connection
         inet_ntop(their_addr.ss_family,
-            get_in_addr((struct sockaddr *)&their_addr),
-            s, sizeof s);
+                  get_in_addr((struct sockaddr *)&their_addr),
+                  s, sizeof s);
         printf("server: got connection from %s\n", s);
-        
+
         // newfd is a new socket descriptor for the new connection.
         // listenfd is still listening for new connections.
 
@@ -246,4 +259,3 @@ int main(void)
 
     return 0;
 }
-
