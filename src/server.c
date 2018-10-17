@@ -53,14 +53,13 @@ int send_response(int fd, char *header, char *content_type, void *body, int cont
     const int max_response_size = 65536;
     char response[max_response_size];
 
-    // Build HTTP response and store it in response
+    time_t time1 = time(NULL);
+    struct tm *localtime1 = localtime(&time1);
 
-    ///////////////////
-    // IMPLEMENT ME! //
-    ///////////////////
-    // int response_length = sprintf(response, "header", "content_type: %s", "body", "content_length: %d");
+    // Build HTTP response and store it in response
+    int response_length = sprintf(response, "%s\n" "Date -> %s" "Connection: close\n" "Length of content -> %d\n" "type of content -> %s\n\n" "%s\n", header, asctime(localtime1), content_length, content_type, body);
     // Send it all!
-    int rv = send(fd, response, content_length, 0);
+    int rv = send(fd, response, response_length, 0);
 
     if (rv < 0) {
         perror("send");
@@ -117,9 +116,18 @@ void resp_404(int fd)
  */
 void get_file(int fd, struct cache *cache, char *request_path)
 {
-    ///////////////////
-    // IMPLEMENT ME! //
-    ///////////////////
+    struct file_data *filedata;
+    filedata = file_load(request_path);
+
+    if(filedata == NULL)
+    {
+        resp_404(fd);
+    }
+    else {
+        char *mime_type = mime_type_get(request_path);
+        send_response(fd, "HTTP/1.1 200 OK", mime_type, filedata->data, filedata->size);
+    }
+    file_free(filedata);
 }
 
 /**
@@ -147,8 +155,8 @@ void handle_http_request(int fd, struct cache *cache)
     int bytes_recvd = recv(fd, request, request_buffer_size - 1, 0);
     
     char req_type[8];
-    char req_path[1024];
-    char req_URI[128];
+    char req_path[150];
+    char req_URI[150];
         
     
     if (bytes_recvd < 0) {
@@ -162,16 +170,13 @@ void handle_http_request(int fd, struct cache *cache)
     if (strcmp(req_type, "GET") == 0) {
         if (strcmp(req_path, "/d20") == 0) {
             get_d20(fd);
+        } else {
+            get_file(fd, cache, req_path);
         }
-    } else {
-        resp_404(fd);
-        // if its not a get, this will run.
     }
-
-    
-    ///////////////////
-    // IMPLEMENT ME! //
-    ///////////////////
+    else {
+        resp_404(fd);
+    }
 
     // Read the three components of the first request line
     
