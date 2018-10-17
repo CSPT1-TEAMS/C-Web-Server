@@ -58,6 +58,7 @@ int send_response(int fd, char *header, char *content_type, void *body, int cont
 
 
     // Build HTTP response and store it in response
+<<<<<<< HEAD
     int response_len = sprintf(response,
                         "%s\n"
                         "Date: %s"
@@ -67,6 +68,9 @@ int send_response(int fd, char *header, char *content_type, void *body, int cont
                         "\n"
                         "%s\n",
                         header,asctime(lt1), content_length,content_type,body);
+=======
+    sprintf(response,"header:%s\n\nContent-Type:%s\n,body:%s\n", header, content_type, body);
+>>>>>>> 7e35f62fc2f7ca747628b65f577398260b9bcf4c
     ///////////////////
     // IMPLEMENT ME! //
     ///////////////////
