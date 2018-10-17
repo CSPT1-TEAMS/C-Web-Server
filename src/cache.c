@@ -115,7 +115,27 @@ struct cache *cache_create(int max_size, int hashsize)
 
     // max size in struct = size given
     cache->max_size = max_size;
+    cache->cur_size = 0;
 
+    return cache;
+
+}
+
+void cache_free(struct cache *cache)
+{
+    struct cache_entry *curr_entry = cache->head;
+
+    while (curr_entry != NULL)
+    {
+        struct cache_entry *ne = curr_entry->next;
+        free_entry(curr_entry);
+
+        curr_entry = ne;
+    }
+
+    hashtable_destroy(cache->index);
+
+    free(cache);
 }
 
 /**
@@ -135,6 +155,7 @@ void cache_put(struct cache *cache, char *path, char *content_type, void *conten
 
     // put in hashtable
     hashtable_put(cache->index, path, ce);
+    cache->cur_size++;
 }
 
 /**
