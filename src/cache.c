@@ -9,7 +9,7 @@
  */
 struct cache_entry *alloc_entry(char *path, char *content_type, void *content, int content_length)
 {
-    struct cache_entry *ce = malloc(sizeof(*ce));
+    struct cache_entry *ce = malloc(sizeof *ce);
 
     ce->path = malloc(strlen(path));
     strcpy(ce->path, path);
@@ -21,6 +21,8 @@ struct cache_entry *alloc_entry(char *path, char *content_type, void *content, i
     memcpy(ce->content, content, content_length);
 
     ce->content_length = content_length;
+
+    return ce;
 
 }
 
@@ -104,7 +106,7 @@ struct cache_entry *dllist_remove_tail(struct cache *cache)
  */
 struct cache *cache_create(int max_size, int hashsize)
 {
-    struct cache *cache = malloc(sizeof(*cache));
+    struct cache *cache = malloc(sizeof *cache);
 
     // reference to DLL
     cache->head = NULL;
@@ -148,7 +150,7 @@ void cache_free(struct cache *cache)
 void cache_put(struct cache *cache, char *path, char *content_type, void *content, int content_length)
 {
     // make cache entry
-    struct cache_entry *ce = alloc_entry(path, content_type, content, content_length); 
+    struct cache_entry *ce = alloc_entry(path, content_type, content, content_length);
 
     // add to head of DLL
     dllist_insert_head(cache, ce);
@@ -177,4 +179,6 @@ struct cache_entry *cache_get(struct cache *cache, char *path)
 
     // else return data, and move to front of DLL to keep from getting removed
     dllist_move_to_head(cache, ce);
+
+    return ce;
 }
